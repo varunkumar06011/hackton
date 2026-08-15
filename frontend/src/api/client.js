@@ -3,6 +3,11 @@ const API_BASE = 'http://localhost:8000/api'
 async function fetchJSON(url, options) {
   const res = await fetch(url, options)
   const data = await res.json()
+  if (!res.ok) {
+    const err = new Error(data.error || data.errors || `Request failed with status ${res.status}`)
+    err.response = { data, status: res.status }
+    throw err
+  }
   return { data, status: res.status }
 }
 

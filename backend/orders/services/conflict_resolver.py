@@ -144,6 +144,15 @@ def resolve_event(event):
     last_snapshot = timeline[-1] if timeline else None
     rule = last_snapshot["rule"] if last_snapshot else "initial_event"
 
+    event_snapshot = None
+    for step in timeline:
+        if step["event_id"] == event.event_id:
+            event_snapshot = step
+            rule = step["rule"]
+            break
+    if not event_snapshot and last_snapshot:
+        rule = last_snapshot["rule"]
+
     order_state = OrderState.objects.create(
         order_id=event.order_id,
         version=new_version,

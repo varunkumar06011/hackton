@@ -183,7 +183,6 @@ def get_stats(request):
     total_audit = AuditLog.objects.count()
     rejected_events = AuditLog.objects.filter(resolution_rule="invalid_transition_rejected").count()
     duplicate_events = AuditLog.objects.filter(resolution_rule="duplicate_ignored").count()
-    avg_processing_time = None
     return Response({
         "total_events": total_events,
         "total_orders": total_orders,

@@ -20,5 +20,5 @@ def get_history(order_id):
 
 
 def list_all_orders():
-    order_ids = OrderState.objects.values_list("order_id", flat=True).distinct()
+    order_ids = OrderState.objects.order_by().values_list("order_id", flat=True).distinct()
     return [get_current_state(oid) for oid in order_ids]
