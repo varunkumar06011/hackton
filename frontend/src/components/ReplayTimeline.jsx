@@ -4,6 +4,7 @@ import { api } from '../api/client'
 export default function ReplayTimeline({ orderId }) {
   const [replay, setReplay] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [upToInput, setUpToInput] = useState('')
   const [upTo, setUpTo] = useState('')
 
   useEffect(() => {
@@ -21,6 +22,10 @@ export default function ReplayTimeline({ orderId }) {
     }
   }
 
+  const handleReplay = () => {
+    setUpTo(upToInput)
+  }
+
   if (!orderId) return <div className="p-8 text-gray-500">Select an order from the dashboard.</div>
   if (loading) return <div className="p-8 text-gray-500">Loading...</div>
   if (!replay) return <div className="p-8 text-gray-500">No replay data found.</div>
@@ -33,11 +38,11 @@ export default function ReplayTimeline({ orderId }) {
           <input
             type="text"
             placeholder="up_to (ISO 8601)"
-            value={upTo}
-            onChange={e => setUpTo(e.target.value)}
+            value={upToInput}
+            onChange={e => setUpToInput(e.target.value)}
             className="border rounded px-3 py-1 text-sm w-64"
           />
-          <button onClick={fetchReplay} className="bg-restaurant-accent text-white px-4 py-1 rounded text-sm">
+          <button onClick={handleReplay} className="bg-restaurant-accent text-white px-4 py-1 rounded text-sm">
             Replay
           </button>
         </div>

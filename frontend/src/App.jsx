@@ -70,7 +70,7 @@ export default function App() {
       <div className="flex-1 overflow-auto">
         {activeTab === 'dashboard' && <Dashboard onSelectOrder={selectOrder} />}
         {activeTab === 'submit' && <EventSubmitter />}
-        {activeTab === 'detail' && <OrderDetail orderId={selectedOrder} />}
+        {activeTab === 'detail' && <OrderDetail orderId={selectedOrder} onBack={() => setActiveTab('dashboard')} />}
         {activeTab === 'audit' && <AuditTrail orderId={selectedOrder} />}
         {activeTab === 'replay' && <ReplayTimeline orderId={selectedOrder} />}
         {activeTab === 'inventory' && <InventoryView />}
