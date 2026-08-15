@@ -1,0 +1,5 @@
+[
+  {"event_id": "late-1", "source": "pos", "order_id": "ORD-002", "timestamp": "2026-08-15T10:05:00Z", "items": [{"name": "Pizza", "quantity": 1}], "status": "pending"},
+  {"event_id": "late-2", "source": "mobile", "order_id": "ORD-002", "timestamp": "2026-08-15T10:10:00Z", "items": [], "status": "preparing"},
+  {"event_id": "late-3", "source": "web", "order_id": "ORD-002", "timestamp": "2026-08-15T10:02:00Z", "items": [{"name": "Salad", "quantity": 1}], "status": "pending"}
+]

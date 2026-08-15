@@ -1,0 +1,155 @@
+{
+  "info": {
+    "name": "VGrand Restaurant Order Conflict Resolution Engine",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api"
+    }
+  ],
+  "item": [
+    {
+      "name": "Submit Event",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": "{{base_url}}/events",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_id\": \"evt-001\",\n  \"source\": \"pos\",\n  \"order_id\": \"ORD-001\",\n  \"timestamp\": \"2026-08-15T10:00:00Z\",\n  \"items\": [{\"name\": \"Burger\", \"quantity\": 2}],\n  \"status\": \"pending\"\n}"
+        }
+      }
+    },
+    {
+      "name": "List All Orders",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/orders"
+      }
+    },
+    {
+      "name": "Get Order State",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/orders/ORD-001"
+      }
+    },
+    {
+      "name": "Get Order History",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/orders/ORD-001/history"
+      }
+    },
+    {
+      "name": "Get Audit Trail",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/orders/ORD-001/audit"
+      }
+    },
+    {
+      "name": "Replay Order",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/orders/ORD-001/replay"
+      }
+    },
+    {
+      "name": "Replay Order (up_to timestamp)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/orders/ORD-001/replay?up_to=2026-08-15T10:05:00Z"
+      }
+    },
+    {
+      "name": "Get State at Version",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/orders/ORD-001/state?version=0"
+      }
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "List Locations",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/locations"
+      }
+    },
+    {
+      "name": "Get Inventory",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/inventory/1"
+      }
+    },
+    {
+      "name": "List Anomalies",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/anomalies"
+      }
+    },
+    {
+      "name": "Notify Driver",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": "{{base_url}}/notify/driver",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"order_id\": \"ORD-001\",\n  \"status\": \"ready\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Fixture: Duplicate Events",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": "{{base_url}}/events",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_id\": \"dup-1\",\n  \"source\": \"pos\",\n  \"order_id\": \"ORD-001\",\n  \"timestamp\": \"2026-08-15T10:00:00Z\",\n  \"items\": [{\"name\": \"Burger\", \"quantity\": 2}],\n  \"status\": \"pending\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Fixture: Late Event",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": "{{base_url}}/events",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_id\": \"late-3\",\n  \"source\": \"web\",\n  \"order_id\": \"ORD-002\",\n  \"timestamp\": \"2026-08-15T10:02:00Z\",\n  \"items\": [{\"name\": \"Salad\", \"quantity\": 1}],\n  \"status\": \"pending\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Fixture: Conflicting Status (mobile delivered)",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": "{{base_url}}/events",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event_id\": \"stat-3\",\n  \"source\": \"web\",\n  \"order_id\": \"ORD-005\",\n  \"timestamp\": \"2026-08-15T10:05:00Z\",\n  \"items\": [],\n  \"status\": \"preparing\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Stats",
+      "request": {"method": "GET", "url": "{{base_url}}/stats"}
+    }
+  ]
+}

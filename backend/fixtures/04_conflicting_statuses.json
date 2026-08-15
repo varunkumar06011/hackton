@@ -1,0 +1,5 @@
+[
+  {"event_id": "stat-1", "source": "pos", "order_id": "ORD-005", "timestamp": "2026-08-15T10:00:00Z", "items": [{"name": "Pasta", "quantity": 1}], "status": "pending"},
+  {"event_id": "stat-2", "source": "pos", "order_id": "ORD-005", "timestamp": "2026-08-15T10:05:00Z", "items": [], "status": "preparing"},
+  {"event_id": "stat-3", "source": "web", "order_id": "ORD-005", "timestamp": "2026-08-15T10:05:00Z", "items": [], "status": "preparing"}
+]

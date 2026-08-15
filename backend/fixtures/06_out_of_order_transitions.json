@@ -1,0 +1,6 @@
+[
+  {"event_id": "trans-1", "source": "pos", "order_id": "ORD-007", "timestamp": "2026-08-15T10:00:00Z", "items": [{"name": "Soup", "quantity": 1}], "status": "pending"},
+  {"event_id": "trans-2", "source": "pos", "order_id": "ORD-007", "timestamp": "2026-08-15T10:05:00Z", "items": [], "status": "preparing"},
+  {"event_id": "trans-3", "source": "pos", "order_id": "ORD-007", "timestamp": "2026-08-15T10:10:00Z", "items": [], "status": "ready"},
+  {"event_id": "trans-4", "source": "mobile", "order_id": "ORD-007", "timestamp": "2026-08-15T10:15:00Z", "items": [], "status": "preparing"}
+]

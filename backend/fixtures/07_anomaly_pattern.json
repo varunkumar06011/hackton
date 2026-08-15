@@ -1,0 +1,6 @@
+[
+  {"event_id": "anom-1", "source": "web", "order_id": "ORD-008", "timestamp": "2026-08-15T10:10:00Z", "items": [{"name": "Tacos", "quantity": 2}], "status": "pending"},
+  {"event_id": "anom-2", "source": "web", "order_id": "ORD-008", "timestamp": "2026-08-15T10:05:00Z", "items": [], "status": "pending"},
+  {"event_id": "anom-3", "source": "web", "order_id": "ORD-008", "timestamp": "2026-08-15T10:03:00Z", "items": [], "status": "pending"},
+  {"event_id": "anom-4", "source": "web", "order_id": "ORD-008", "timestamp": "2026-08-15T10:01:00Z", "items": [], "status": "pending"}
+]

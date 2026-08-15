@@ -1,0 +1,4 @@
+[
+  {"event_id": "dup-1", "source": "pos", "order_id": "ORD-001", "timestamp": "2026-08-15T10:00:00Z", "items": [{"name": "Burger", "quantity": 2}], "status": "pending"},
+  {"event_id": "dup-1", "source": "pos", "order_id": "ORD-001", "timestamp": "2026-08-15T10:00:00Z", "items": [{"name": "Burger", "quantity": 2}], "status": "pending"}
+]

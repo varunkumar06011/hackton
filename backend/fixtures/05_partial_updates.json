@@ -1,0 +1,5 @@
+[
+  {"event_id": "part-1", "source": "web", "order_id": "ORD-006", "timestamp": "2026-08-15T10:00:00Z", "items": [{"name": "Burger", "quantity": 2}, {"name": "Fries", "quantity": 1}], "status": "pending"},
+  {"event_id": "part-2", "source": "pos", "order_id": "ORD-006", "timestamp": "2026-08-15T10:05:00Z", "items": [{"name": "Burger", "quantity": 3}], "status": "preparing"},
+  {"event_id": "part-3", "source": "mobile", "order_id": "ORD-006", "timestamp": "2026-08-15T10:10:00Z", "items": [{"name": "Fries", "quantity": 0}], "status": "preparing"}
+]
