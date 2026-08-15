@@ -36,7 +36,8 @@ pip install -r requirements.txt
 
 # Optional: Set DATABASE_URL for PostgreSQL/Supabase
 # export DATABASE_URL="postgresql://user:pass@host:port/dbname"
-# On Windows: set DATABASE_URL=postgresql://user:pass@host:port/dbname
+# On Windows (PowerShell): $env:DATABASE_URL="postgresql://user:pass@host:port/dbname"
+# Or create a .env file (see .env.example)
 
 python manage.py migrate
 python manage.py runserver
@@ -101,7 +102,7 @@ The dashboard will be available at `http://localhost:5173`
 | Conflicting status updates | Latest timestamp wins; ties broken by source priority |
 | Missing/empty items | No item change, only status update |
 | Partial item update | Merge by name: qty > 0 adds/overwrites, qty = 0 removes |
-| Invalid status transition | Rejected (e.g., delivered → preparing); logged in audit |
+| Invalid status transition | Rejected (e.g., delivered → preparing); logged in audit; items NOT merged |
 
 **Source priority**: `pos (0) > mobile (1) > web (2)`
 
@@ -194,9 +195,21 @@ The React dashboard provides:
 
 ## Tech Stack
 
-- **Backend**: Django 5.x, Django REST Framework, PostgreSQL (or SQLite)
+- **Backend**: Django 5.x, Django REST Framework, PostgreSQL (or SQLite), gunicorn, WhiteNoise
 - **Frontend**: React 18, Vite, Tailwind CSS — uses native `fetch()`, CSS/SVG timeline, emoji status badges
 - **Database**: PostgreSQL via `DATABASE_URL` env var (SQLite fallback)
+- **Deployment**: Railway (backend via `Procfile`), Vercel (frontend via `VITE_API_BASE`)
+
+### Environment Variables
+
+| Variable | Where | Default | Description |
+|----------|-------|---------|-------------|
+| `DATABASE_URL` | backend | SQLite | PostgreSQL connection string |
+| `SECRET_KEY` | backend | dev key | Django secret key (set in production) |
+| `DEBUG` | backend | `false` | Django debug mode |
+| `ALLOWED_HOSTS` | backend | `localhost,127.0.0.1` | Comma-separated allowed hosts |
+| `CORS_ALLOWED_ORIGINS` | backend | `http://localhost:5173` | Comma-separated CORS origins |
+| `VITE_API_BASE` | frontend | `http://localhost:8000/api` | Backend API URL for deployed frontend |
 
 ## Postman Collection
 
@@ -209,6 +222,8 @@ Import `docs/postman_collection.json` into Postman for pre-configured API reques
 3. **Fixture 03**: Shows two sources conflicting on the same order at the same timestamp — priority tiebreak resolves it.
 4. **Fixture 04**: Shows two valid status updates at the same timestamp — POS priority determines processing order.
 5. **Fixture 05**: Shows partial item updates including removal via quantity zero — merge logic in action.
+6. **Fixture 06**: Shows an invalid backward status transition (ready → preparing) being rejected.
+7. **Fixture 07**: Shows repeated late events from the same source triggering anomaly detection.
 
 ## Concurrency Assumption
 

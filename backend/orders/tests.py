@@ -331,3 +331,82 @@ class IntegrityErrorTest(TestCase):
             r = self._submit(payload)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.data["status"], "duplicate_ignored")
+
+
+class PerformanceTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def _submit(self, payload):
+        return self.client.post("/api/events", payload, format="json")
+
+    def test_processing_time_under_500ms(self):
+        for i in range(10):
+            self._submit({
+                "event_id": f"perf-build-{i}",
+                "source": "pos",
+                "order_id": "ORD-PERF-1",
+                "timestamp": f"2026-08-15T10:{i:02d}:00Z",
+                "items": [{"name": f"Item{i}", "quantity": i + 1}],
+                "status": "pending" if i == 0 else "preparing",
+            })
+        r = self._submit({
+            "event_id": "perf-measure",
+            "source": "pos",
+            "order_id": "ORD-PERF-1",
+            "timestamp": "2026-08-15T10:20:00Z",
+            "items": [{"name": "NewItem", "quantity": 1}],
+            "status": "preparing",
+        })
+        self.assertEqual(r.status_code, 201)
+        self.assertLess(r.data["processing_time_ms"], 500)
+
+
+class RejectedTransitionTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def _submit(self, payload):
+        return self.client.post("/api/events", payload, format="json")
+
+    def test_rejected_transition_does_not_merge_items(self):
+        self._submit({"event_id": "rej-1", "source": "pos", "order_id": "ORD-REJ-1", "timestamp": "2026-08-15T10:00:00Z", "items": [{"name": "Burger", "quantity": 2}], "status": "pending"})
+        self._submit({"event_id": "rej-2", "source": "pos", "order_id": "ORD-REJ-1", "timestamp": "2026-08-15T10:05:00Z", "items": [], "status": "preparing"})
+        self._submit({"event_id": "rej-3", "source": "pos", "order_id": "ORD-REJ-1", "timestamp": "2026-08-15T10:10:00Z", "items": [], "status": "ready"})
+        self._submit({"event_id": "rej-4", "source": "mobile", "order_id": "ORD-REJ-1", "timestamp": "2026-08-15T10:15:00Z", "items": [{"name": "Fries", "quantity": 3}], "status": "preparing"})
+
+        state = OrderState.objects.filter(order_id="ORD-REJ-1").order_by("-version").first()
+        self.assertEqual(state.status, "ready")
+        item_names = [i["name"] for i in state.items]
+        self.assertNotIn("Fries", item_names)
+
+    def test_rejected_transition_source_of_truth_unchanged(self):
+        self._submit({"event_id": "rej-5", "source": "pos", "order_id": "ORD-REJ-2", "timestamp": "2026-08-15T10:00:00Z", "items": [{"name": "Burger", "quantity": 1}], "status": "pending"})
+        self._submit({"event_id": "rej-6", "source": "pos", "order_id": "ORD-REJ-2", "timestamp": "2026-08-15T10:05:00Z", "items": [], "status": "preparing"})
+        self._submit({"event_id": "rej-7", "source": "pos", "order_id": "ORD-REJ-2", "timestamp": "2026-08-15T10:10:00Z", "items": [], "status": "ready"})
+        self._submit({"event_id": "rej-8", "source": "mobile", "order_id": "ORD-REJ-2", "timestamp": "2026-08-15T10:15:00Z", "items": [], "status": "preparing"})
+
+        state = OrderState.objects.filter(order_id="ORD-REJ-2").order_by("-version").first()
+        self.assertEqual(state.status, "ready")
+        self.assertEqual(state.source_of_truth, "pos")
+        self.assertEqual(state.last_event_id, "rej-7")
+
+
+class TimestampValidationTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def _submit(self, payload):
+        return self.client.post("/api/events", payload, format="json")
+
+    def test_invalid_timestamp_rejected(self):
+        r = self._submit({"event_id": "ts-1", "source": "pos", "order_id": "ORD-TS-1", "timestamp": "not-a-date", "items": [], "status": "pending"})
+        self.assertEqual(r.status_code, 400)
+
+    def test_empty_timestamp_rejected(self):
+        r = self._submit({"event_id": "ts-2", "source": "pos", "order_id": "ORD-TS-2", "timestamp": "", "items": [], "status": "pending"})
+        self.assertEqual(r.status_code, 400)
+
+    def test_valid_timestamp_accepted(self):
+        r = self._submit({"event_id": "ts-3", "source": "pos", "order_id": "ORD-TS-3", "timestamp": "2026-08-15T10:00:00Z", "items": [], "status": "pending"})
+        self.assertEqual(r.status_code, 201)

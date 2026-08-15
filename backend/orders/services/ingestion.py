@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.conf import settings
 from orders.models import Event
 
@@ -21,6 +22,12 @@ def validate_event(data):
 
     if data.get("status") not in VALID_STATUSES:
         errors.append(f"Invalid status. Must be one of: {VALID_STATUSES}")
+
+    if data.get("timestamp"):
+        try:
+            datetime.fromisoformat(str(data["timestamp"]).replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            errors.append("timestamp must be a valid ISO 8601 datetime string")
 
     items = data.get("items", [])
     if items is not None:

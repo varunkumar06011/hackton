@@ -22,12 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-q*2ph-*fmo@@yuj_6ly2f0+vi@p*6)))o4sv6#f7(==ba=s60n'
+# Read from env so the real key is never committed. The fallback is only for
+# local dev and must NEVER be used in production.
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-key-change-in-production")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Defaults to False (safe); enable explicitly for local dev via DEBUG=true.
+DEBUG = os.environ.get("DEBUG", "false").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = ["*"]
+# Restrict to known hosts. Defaults to localhost for dev; override via env
+# (comma-separated) in production, e.g. ALLOWED_HOSTS=api.example.com
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -47,6 +52,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -113,12 +119,26 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Static files for production (whitenoise). collectstatic must be run on deploy.
+# Railway runs this automatically if listed in the build command, or via the
+# Procfile release command. See Procfile.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS: restrict to known origins. Defaults to the Vite dev server only.
+# Override in production via CORS_ALLOWED_ORIGINS=https://app.example.com
+# (comma-separated). Never re-enable CORS_ALLOW_ALL_ORIGINS in production.
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in os.environ.get(
+        "CORS_ALLOWED_ORIGINS", "http://localhost:5173"
+    ).split(",") if o.strip()
+]
 
 # Conflict Resolution Configuration
 SOURCE_PRIORITY = {'pos': 0, 'mobile': 1, 'web': 2}

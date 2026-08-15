@@ -1,3 +1,4 @@
+from django.db.models import Subquery, OuterRef
 from orders.models import OrderState
 
 
@@ -20,5 +21,14 @@ def get_history(order_id):
 
 
 def list_all_orders():
-    order_ids = OrderState.objects.order_by().values_list("order_id", flat=True).distinct()
-    return [get_current_state(oid) for oid in order_ids]
+    latest_ids = (
+        OrderState.objects
+        .filter(order_id=OuterRef("order_id"))
+        .order_by("-version")
+        .values("id")[:1]
+    )
+    return list(
+        OrderState.objects
+        .filter(id__in=Subquery(latest_ids))
+        .order_by("-version")
+    )

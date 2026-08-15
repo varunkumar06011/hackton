@@ -1,7 +1,7 @@
 from datetime import datetime
 import time
 from django.http import JsonResponse
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -46,7 +46,11 @@ def submit_event(request):
         }, status=200)
 
     try:
-        event = save_event(result)
+        with transaction.atomic():
+            event = save_event(result)
+            t0 = time.perf_counter()
+            order_state, audit = resolve_event(event)
+            t1 = time.perf_counter()
     except IntegrityError:
         current = get_current_state(result["order_id"])
         return Response({
@@ -55,9 +59,6 @@ def submit_event(request):
             "existing_state": OrderStateSerializer(current).data if current else None,
         }, status=200)
 
-    t0 = time.perf_counter()
-    order_state, audit = resolve_event(event)
-    t1 = time.perf_counter()
     processing_time_ms = round((t1 - t0) * 1000, 2)
 
     try:

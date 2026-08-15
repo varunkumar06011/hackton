@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.conf import settings
 from orders.models import Event, OrderState, AuditLog
 
@@ -67,10 +68,11 @@ def reducer(events, up_to=None):
             rule = "invalid_transition_rejected"
             rejected_events.append(event.event_id)
 
-        state["items"] = merge_items(state["items"], event.items)
-        state["last_event_id"] = event.event_id
-        state["last_event_timestamp"] = event.timestamp.isoformat()
-        state["source_of_truth"] = event.source
+        if rule != "invalid_transition_rejected":
+            state["items"] = merge_items(state["items"], event.items)
+            state["last_event_id"] = event.event_id
+            state["last_event_timestamp"] = event.timestamp.isoformat()
+            state["source_of_truth"] = event.source
 
         snapshot = {
             "step": step,
@@ -153,13 +155,21 @@ def resolve_event(event):
     if not event_snapshot and last_snapshot:
         rule = last_snapshot["rule"]
 
+    last_ts_str = final_state["last_event_timestamp"]
+    last_ts = None
+    if last_ts_str:
+        try:
+            last_ts = datetime.fromisoformat(last_ts_str)
+        except (ValueError, TypeError):
+            last_ts = event.timestamp
+
     order_state = OrderState.objects.create(
         order_id=event.order_id,
         version=new_version,
         status=final_state["status"] or "pending",
         items=final_state["items"],
         last_event_id=final_state["last_event_id"] or event.event_id,
-        last_event_timestamp=event.timestamp,
+        last_event_timestamp=last_ts,
         source_of_truth=final_state["source_of_truth"] or event.source,
     )
 

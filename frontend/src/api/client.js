@@ -1,4 +1,7 @@
-const API_BASE = 'http://localhost:8000/api'
+// API base is env-driven so the deployed frontend (Vercel) can point at the
+// deployed backend (Railway). Falls back to localhost for local dev.
+// Set VITE_API_BASE in Vercel project env vars, e.g. https://your-app.up.railway.app/api
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'
 
 async function fetchJSON(url, options) {
   const res = await fetch(url, options)

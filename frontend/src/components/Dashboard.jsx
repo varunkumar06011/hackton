@@ -1,24 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api/client'
-
-const STATUS_EMOJI = {
-  pending: '⏳',
-  preparing: '🔥',
-  ready: '✅',
-  delivered: '📦',
-  cancelled: '❌',
-}
-
-const statusBadge = (status) => {
-  const cls = {
-    pending: 'badge-pending',
-    preparing: 'badge-preparing',
-    ready: 'badge-ready',
-    delivered: 'badge-delivered',
-    cancelled: 'badge-cancelled',
-  }
-  return <span className={cls[status] || 'badge-pending'}>{STATUS_EMOJI[status]} {status}</span>
-}
+import { STATUS_EMOJI, statusBadge } from './badges'
 
 export default function Dashboard({ onSelectOrder }) {
   const [orders, setOrders] = useState([])

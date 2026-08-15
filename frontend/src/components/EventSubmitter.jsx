@@ -78,8 +78,15 @@ export default function EventSubmitter() {
     try {
       const payload = {
         ...formData,
+        event_id: formData.event_id.trim() || `evt-${Date.now()}`,
+        order_id: formData.order_id.trim(),
         items: formData.items.filter(i => i.name.trim() !== ''),
         timestamp: formData.timestamp || new Date().toISOString(),
+      }
+      if (!payload.order_id) {
+        setError('Order ID is required')
+        setSubmitting(false)
+        return
       }
       const res = await api.submitEvent(payload)
       setResponse(res.data)

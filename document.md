@@ -236,6 +236,7 @@ def reducer(events, up_to=None):
     #       - valid_transition (allowed by VALID_TRANSITIONS)
     #       - invalid_transition_rejected (not allowed)
     #    b. Update state (status, items, last_event, source)
+    #       — skipped for invalid_transition_rejected (items NOT merged)
     #    c. Record timeline snapshot
     # 5. Return final state, timeline, rejected events
 ```
@@ -277,6 +278,7 @@ Performed by `validate_event()` in `ingestion.py`:
 | `items` is a list (if present) | `items must be a list` |
 | Each item has `name` (non-empty string) | `items[i].name is required` |
 | Each item has `quantity` (non-negative integer) | `items[i].quantity must be a non-negative integer` |
+| `timestamp` is valid ISO 8601 | `timestamp must be a valid ISO 8601 datetime string` |
 
 ### 4.5 Resolution Flow (`resolve_event`)
 
@@ -541,7 +543,7 @@ Health check endpoint.
 | `initial_event` | First event for an order (no prior status) | Sets status and items |
 | `no_status_change` | Event has same status as current state | Items merged, status unchanged |
 | `valid_transition` | Status change allowed by `VALID_TRANSITIONS` | Status updated, items merged |
-| `invalid_transition_rejected` | Status change not allowed | Status unchanged, event logged as rejected, items still merged |
+| `invalid_transition_rejected` | Status change not allowed | Status unchanged, event logged as rejected, items NOT merged |
 | `duplicate_ignored` | Event with same `event_id` already exists | No state change, existing state returned |
 
 ### Conflict Scenarios
@@ -747,6 +749,8 @@ This is a dummy implementation — no actual push notification is sent. The noti
 `src/api/client.js` wraps `fetch()` with automatic JSON parsing and error throwing:
 
 ```javascript
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'
+
 async function fetchJSON(url, options) {
   const res = await fetch(url, options)
   const data = await res.json()
@@ -758,6 +762,8 @@ async function fetchJSON(url, options) {
   return { data, status: res.status }
 }
 ```
+
+`VITE_API_BASE` allows the deployed frontend (e.g. Vercel) to point at the deployed backend (e.g. Railway).
 
 ### Embedded Fixtures
 
@@ -1043,13 +1049,41 @@ python manage.py test --verbosity=2
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | No | SQLite (`db.sqlite3`) | PostgreSQL connection string |
-| `SECRET_KEY` | Yes (production) | Hardcoded (dev) | Django secret key |
-| `DEBUG` | No | `True` | Django debug mode |
+| `SECRET_KEY` | Yes (production) | `dev-insecure-key-change-in-production` | Django secret key |
+| `DEBUG` | No | `False` | Django debug mode (set `DEBUG=true` for local dev) |
+| `ALLOWED_HOSTS` | No | `localhost,127.0.0.1` | Comma-separated allowed hosts |
+| `CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173` | Comma-separated allowed CORS origins |
 
-### `.env.example`
+### Frontend
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `VITE_API_BASE` | No | `http://localhost:8000/api` | Backend API base URL (set for deployed environments) |
+
+### `.env.example` (backend)
+
+``````
+# Copy to .env and set real values for production.
+
+# Django
+SECRET_KEY=change-me-to-a-long-random-string
+DEBUG=false
+ALLOWED_HOSTS=localhost,127.0.0.1
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+
+# Database
+DATABASE_URL=postgres://user:password@localhost:5432/vgrand
+
+# Supabase (optional)
+# SUPABASE_URL=https://your-project.supabase.co
+# SUPABASE_ANON_KEY=your-anon-public-key
+# SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+``````
+
+### `.env.example` (frontend)
 
 ```
-DATABASE_URL=postgres://user:password@localhost:5432/vgrand
+VITE_API_BASE=http://localhost:8000/api
 ```
 
 ### Dependencies
@@ -1061,7 +1095,11 @@ djangorestframework==3.15.1
 django-cors-headers==4.3.1
 psycopg2-binary==2.9.9
 dj-database-url==2.2.0
+gunicorn==22.0.0
+whitenoise==6.7.0
 ```
+
+**Deployment**: `Procfile` runs `gunicorn vgrand.wsgi` for web and `python manage.py migrate --noinput && python manage.py collectstatic --noinput` for release. WhiteNoise serves static files.
 
 **Frontend** (`package.json`):
 ```
@@ -1087,6 +1125,7 @@ Hackton/
 │   └── postman_collection.json    ← Postman API collection
 ├── backend/
 │   ├── .env.example
+│   ├── Procfile                   ← Railway deploy (gunicorn + migrate/collectstatic)
 │   ├── manage.py
 │   ├── requirements.txt
 │   ├── db.sqlite3                 ← auto-generated (gitignored)
@@ -1130,6 +1169,7 @@ Hackton/
 │       ├── 06_out_of_order_transitions.json
 │       └── 07_anomaly_pattern.json
 └── frontend/
+    ├── .env.example               ← VITE_API_BASE for deployed environments
     ├── package.json
     ├── package-lock.json
     ├── vite.config.js
